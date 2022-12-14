@@ -14,9 +14,9 @@
 
 ### Technology Tree
 
-1. Exress
-2. MongoDB
-3. Mongoose
+- Exress
+- MongoDB
+- Mongoose
 
 #### Miscellaneous
 
