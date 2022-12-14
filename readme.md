@@ -2,8 +2,24 @@
 
 ## Yelp allows users to register and create campsites, post reviews upload images and use geo location data
 
-## includes full CRUD functionality
+- includes full CRUD functionality
 
-## authorization implementation
+- authorization implementation
 
-## security ## error handling ## deployment on the cloud
+- security
+
+- error handling
+
+- deployment on the cloud
+
+### Technology Tree
+
+1. Exress
+2. MongoDB
+3. Mongoose
+
+#### Miscellaneous
+
+- JOI
+- EJS MATE
+- METHOD-OVERRIDE
