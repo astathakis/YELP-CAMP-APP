@@ -1,10 +1,14 @@
 const express = require('express');
 const path = require('path');
 const mongoose = require('mongoose');
+//boilerplate for our views
 const ejsMate = require('ejs-mate');
+
+const { campgroundSchema } = require('./schemas.js');
 const catchAsync = require('./utils/catchAsync');
-const methodOverride = require('method-override');
 const Campground = require('./models/campground');
+const ExpressError = require('./utils/ExpressError');
+const methodOverride = require('method-override');
 
 mongoose.set('strictQuery', true);
 
@@ -31,6 +35,19 @@ app.use(express.urlencoded({ extented: true }));
 //method-override
 app.use(methodOverride('_method'));
 
+//build validation middleware (server side)
+const validateCampground = (req, res, next) => {
+  const { error } = campgroundSchema.validate(req.body);
+  //error.details is an array of objects
+  if (error) {
+    const msg = error.details.map((el) => el.message).join(',');
+    throw new ExpressError(msg, 400);
+  } else {
+    next();
+  }
+  // console.log(error);
+};
+
 //+++++++++++++Set up our REST routes+++++++++++
 
 app.get('/', (req, res) => {
@@ -50,16 +67,7 @@ app.get(
 app.get('/campgrounds/new', (req, res) => {
   res.render('campgrounds/new');
 });
-// and one for the post
-//including error wrapper
-app.post(
-  '/campgrounds',
-  catchAsync(async (req, res, next) => {
-    const campground = new Campground(req.body.campground);
-    await campground.save();
-    res.redirect(`/campgrounds/${campground._id}`);
-  })
-);
+
 // ++++++++++++show route+++++++++++
 app.get(
   '/campgrounds/:id',
@@ -68,6 +76,25 @@ app.get(
     res.render('campgrounds/show', { campground });
   })
 );
+
+// and one for the post
+//including error wrapper
+
+app.post(
+  '/campgrounds',
+  validateCampground,
+
+  catchAsync(async (req, res, next) => {
+    // if (!req.body.campground)
+    //   throw new ExpressError('invalid Campground data', 400);
+
+    const campground = new Campground(req.body.campground);
+    await campground.save();
+    res.redirect(`/campgrounds/${campground._id}`);
+    // res.render('home');
+  })
+);
+
 // +++++++++++edit route++++++++++
 //get the id and prepopulated the form with the information
 app.get(
@@ -80,6 +107,8 @@ app.get(
 //faking post request from form with a put request using method-override
 app.put(
   '/campgrounds/:id',
+  validateCampground,
+
   catchAsync(async (req, res) => {
     const { id } = req.params;
     const campground = await Campground.findByIdAndUpdate(id, {
@@ -99,9 +128,35 @@ app.delete(
   })
 );
 
+// for every single req and every path
+app.all('*', (req, res, next) => {
+  // res.send('404!!!');
+  next(new ExpressError('page not found!!!', 404));
+  // next();
+  // console.log('this is ...');
+  // throw new ExpressError('page not found', 404);
+  // throw new ExpressError('page not found express!!', 404);
+});
+
+// app.use((err, req, res, next) => {
+//   console.log(err.name);
+//   next(err);
+// });
+
 // owr own error handler
 app.use((err, req, res, next) => {
-  res.send('oh, something went wrong!');
+  const { statusCode = 500 } = err;
+  console.log(err);
+  // res.status(statusCode).send(message);
+
+  // // ==============error template========================
+  if (!err.message) err.message = 'Oh no, something went wrong';
+  res.status(statusCode).render('error', { err });
+
+  // res.send(message);
+  // console.log('testing..');
+  // next();
+  // res.send('oh, something is wrong');
 });
 
 // +++++++++++listen on port 3000++++++++++++
