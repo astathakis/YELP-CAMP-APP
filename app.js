@@ -3,6 +3,8 @@ const path = require('path');
 const mongoose = require('mongoose');
 //boilerplate for our views
 const ejsMate = require('ejs-mate');
+const session = require('express-session');
+const flash = require('connect-flash');
 
 const ExpressError = require('./utils/ExpressError');
 const methodOverride = require('method-override');
@@ -31,13 +33,41 @@ app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
 
 //enable to parse the body of the request
-app.use(express.urlencoded({ extented: true }));
+app.use(express.urlencoded({ extended: true }));
+
+// express.urlencoded({ extented: true });
 //method-override
 app.use(methodOverride('_method'));
+//serving static files
+app.use(express.static('public'));
+app.set(express.static(path.join(__dirname, 'public')));
+
+//session initial config
+const sessionConfig = {
+  secret: 'thisshouldbeabettersecret!',
+  resave: false,
+  saveUninitialized: true,
+  cookie: {
+    httpOnly: true,
+    //after a week milisecs
+    expires: Date.now() + 1000 * 60 * 60 * 24 * 7,
+    maxAge: 1000 * 60 * 60 * 24 * 7,
+  },
+};
+
+app.use(session(sessionConfig));
+app.use(flash());
+
+app.use((req, res, next) => {
+  res.locals.success = req.flash('success');
+  res.locals.error = req.flash('error');
+  next();
+});
 
 //+++++++++++++Set up our REST routes+++++++++++
 
 app.use('/campgrounds', campgrounds);
+//you should provide this id with merge params in reviews router to have access since routes have their own params
 app.use('/campgrounds/:id/reviews', reviews);
 
 app.get('/', (req, res) => {
@@ -53,7 +83,7 @@ app.all('*', (req, res, next) => {
 // owr own error handler
 app.use((err, req, res, next) => {
   const { statusCode = 500 } = err;
-  console.log(err);
+  // console.log(err);
   // res.status(statusCode).send(message);
 
   // // ==============error template==========

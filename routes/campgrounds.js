@@ -40,6 +40,10 @@ router.get(
       'reviews'
     );
     // console.log(campground);
+    if (!campground) {
+      req.flash('error', 'campground does not exist!!!');
+      return res.redirect('/campgrounds');
+    }
     res.render('campgrounds/show', { campground });
   })
 );
@@ -57,6 +61,7 @@ router.post(
 
     const campground = new Campground(req.body.campground);
     await campground.save();
+    req.flash('success', 'Successfully made a new campground!!');
     res.redirect(`/campgrounds/${campground._id}`);
     // res.render('home');
   })
@@ -64,10 +69,15 @@ router.post(
 
 // +++++++++++edit route++++++++++
 //get the id and prepopulated the form with the information
+//no need to use merger params here cause id is defined within our router in the path
 router.get(
   '/:id/edit',
   catchAsync(async (req, res) => {
     const campground = await Campground.findById(req.params.id);
+    if (!campground) {
+      req.flash('error', 'cannot edit campground does not exist!!!');
+      return res.redirect('/campgrounds');
+    }
     res.render('campgrounds/edit', { campground });
   })
 );
@@ -81,6 +91,7 @@ router.put(
     const campground = await Campground.findByIdAndUpdate(id, {
       ...req.body.campground,
     });
+    req.flash('success', 'successfully updated campground!!!');
     res.redirect(`/campgrounds/${campground._id}`);
   })
 );
@@ -91,6 +102,7 @@ router.delete(
   catchAsync(async (req, res) => {
     const { id } = req.params;
     await Campground.findByIdAndDelete(id);
+    req.flash('success', 'campground deleted!!!');
     res.redirect('/campgrounds');
   })
 );
