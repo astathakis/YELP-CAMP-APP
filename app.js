@@ -9,6 +9,11 @@ const flash = require('connect-flash');
 const ExpressError = require('./utils/ExpressError');
 const methodOverride = require('method-override');
 
+//authentication
+const passport = require('passport');
+const LocalStrategy = require('passport-local');
+const User = require('./models/user');
+
 //router campgrounds
 const campgrounds = require('./routes/campgrounds');
 const reviews = require('./routes/reviews');
@@ -58,10 +63,25 @@ const sessionConfig = {
 app.use(session(sessionConfig));
 app.use(flash());
 
+app.use(passport.initialize());
+//always use after plain session
+app.use(passport.session());
+//hello passport use localStrategy on this user + method
+passport.use(new LocalStrategy(User.authenticate()));
+//strore and unstore a user in a session see docs for more..
+passport.serializeUser(User.serializeUser());
+passport.deserializeUser(User.deserializeUser());
+
 app.use((req, res, next) => {
   res.locals.success = req.flash('success');
   res.locals.error = req.flash('error');
   next();
+});
+
+app.get('/fakeUser', async (req, res) => {
+  const user = new User({ email: 'tasoss@gmail.com', username: 'tasosss' });
+  const newUser = await User.register(user, 'chicken');
+  res.send(newUser);
 });
 
 //+++++++++++++Set up our REST routes+++++++++++
