@@ -15,8 +15,9 @@ const LocalStrategy = require('passport-local');
 const User = require('./models/user');
 
 //router campgrounds
-const campgrounds = require('./routes/campgrounds');
-const reviews = require('./routes/reviews');
+const userRoutes = require('./routes/users');
+const campgroundRoutes = require('./routes/campgrounds');
+const reviewRoutes = require('./routes/reviews');
 
 mongoose.set('strictQuery', true);
 
@@ -80,15 +81,17 @@ app.use((req, res, next) => {
 
 app.get('/fakeUser', async (req, res) => {
   const user = new User({ email: 'tasoss@gmail.com', username: 'tasosss' });
+  //register - from mongoose plugin
   const newUser = await User.register(user, 'chicken');
   res.send(newUser);
 });
 
 //+++++++++++++Set up our REST routes+++++++++++
 
-app.use('/campgrounds', campgrounds);
+app.use('/', userRoutes);
+app.use('/campgrounds', campgroundRoutes);
 //you should provide this id with merge params in reviews router to have access since routes have their own params
-app.use('/campgrounds/:id/reviews', reviews);
+app.use('/campgrounds/:id/reviews', reviewRoutes);
 
 app.get('/', (req, res) => {
   res.render('home');
