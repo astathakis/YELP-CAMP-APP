@@ -4,6 +4,7 @@ const catchAsync = require('../utils/catchAsync');
 const ExpressError = require('../utils/ExpressError');
 const Campground = require('../models/campground');
 const { campgroundSchema } = require('../schemas.js');
+const { isLoggedIn } = require('../middleware');
 
 //build validation middleware (server side)
 const validateCampground = (req, res, next) => {
@@ -28,13 +29,14 @@ router.get(
 
 // +++create new camp has two route handlers++++++
 // one to serve our form
-router.get('/new', (req, res) => {
+router.get('/new', isLoggedIn, (req, res) => {
   res.render('campgrounds/new');
 });
 
 // ++++++++++++show route+++++++++++
 router.get(
   '/:id',
+
   catchAsync(async (req, res) => {
     const campground = await Campground.findById(req.params.id).populate(
       'reviews'
@@ -53,6 +55,7 @@ router.get(
 
 router.post(
   '/',
+  isLoggedIn,
   validateCampground,
 
   catchAsync(async (req, res, next) => {
@@ -72,6 +75,7 @@ router.post(
 //no need to use merger params here cause id is defined within our router in the path
 router.get(
   '/:id/edit',
+  isLoggedIn,
   catchAsync(async (req, res) => {
     const campground = await Campground.findById(req.params.id);
     if (!campground) {
@@ -84,6 +88,7 @@ router.get(
 //faking post request from form with a put request using method-override
 router.put(
   '/:id',
+  isLoggedIn,
   validateCampground,
 
   catchAsync(async (req, res) => {
@@ -99,6 +104,7 @@ router.put(
 // +++++++++++++++delete route+++++++++
 router.delete(
   '/:id',
+  isLoggedIn,
   catchAsync(async (req, res) => {
     const { id } = req.params;
     await Campground.findByIdAndDelete(id);
