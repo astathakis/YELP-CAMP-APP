@@ -38,10 +38,10 @@ router.get(
   '/:id',
 
   catchAsync(async (req, res) => {
-    const campground = await Campground.findById(req.params.id).populate(
-      'reviews'
-    );
-    // console.log(campground);
+    const campground = await Campground.findById(req.params.id)
+      .populate('reviews')
+      .populate('author');
+    console.log(campground);
     if (!campground) {
       req.flash('error', 'campground does not exist!!!');
       return res.redirect('/campgrounds');
@@ -63,6 +63,8 @@ router.post(
     //   throw new ExpressError('invalid Campground data', 400);
 
     const campground = new Campground(req.body.campground);
+    //associate a user with a campground
+    campground.author = req.user._id;
     await campground.save();
     req.flash('success', 'Successfully made a new campground!!');
     res.redirect(`/campgrounds/${campground._id}`);
