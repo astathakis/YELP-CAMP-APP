@@ -46,7 +46,7 @@ router.post(
   (req, res) => {
     req.flash('success', 'welcome back!');
     //also possible to have returnedTo with nothing
-    console.log(req.session.returnTo);
+    // console.log(req.session.returnTo);
     const redirectUrl = req.session.returnTo || '/campgrounds';
     delete req.session.returnTo;
     res.redirect(redirectUrl);
