@@ -10,11 +10,16 @@ const Campground = require('../models/campground');
 
 const { isLoggedIn, isAuthor, validateCampground } = require('../middleware');
 
+const { storage } = require('../cloudinary');
+const multer = require('multer');
+const upload = multer({ storage });
+
 //group with router.route
 router.route('/').get(catchAsync(campgrounds.index)).post(
   isLoggedIn,
-  validateCampground,
 
+  upload.array('image'),
+  validateCampground,
   catchAsync(campgrounds.createCampground)
 );
 
@@ -28,6 +33,7 @@ router
   .put(
     isLoggedIn,
     isAuthor,
+    upload.array('image'),
     validateCampground,
 
     catchAsync(campgrounds.updateCampground)

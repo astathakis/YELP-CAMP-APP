@@ -6,6 +6,10 @@ const ejsMate = require('ejs-mate');
 const session = require('express-session');
 const flash = require('connect-flash');
 
+if (process.env.NODE_ENV !== 'production') {
+  require('dotenv').config();
+}
+
 const ExpressError = require('./utils/ExpressError');
 const methodOverride = require('method-override');
 
