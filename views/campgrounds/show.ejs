@@ -75,6 +75,9 @@
   </div>
   <!-- our col-6 -->
   <div class="col-6">
+    <!-- map -->
+    <div id="map" style="width: 400px; height: 300px"></div>
+
     <% if(currentUser) { %>
 
     <h2>Leave a Review</h2>
@@ -190,6 +193,14 @@
 
 <!-- ==================== -->
 
-<footer>
+<!-- <footer>
   <a href="/campgrounds">All Campgrounds</a>
-</footer>
+</footer> -->
+
+<!-- pass the token to the js file showPageMap -->
+<script>
+  const mapToken = '<%-process.env.MAPBOX_TOKEN%>';
+  const campground = <%- JSON.stringify(campground) %>;
+</script>
+
+<script src="/javascripts/showPageMap.js"></script>

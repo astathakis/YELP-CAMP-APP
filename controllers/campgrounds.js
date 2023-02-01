@@ -1,6 +1,12 @@
 //MVC patern -models,views,controllers
 const Campground = require('../models/campground');
 
+const mbxGeocoding = require('@mapbox/mapbox-sdk/services/geocoding');
+//grab token
+const mapBoxToken = process.env.MAPBOX_TOKEN;
+const geoCoder = mbxGeocoding({ accessToken: mapBoxToken });
+const { cloudinary } = require('../cloudinary');
+
 module.exports.index = async (req, res) => {
   const campgrounds = await Campground.find({});
   res.render('campgrounds/index', { campgrounds });
@@ -13,8 +19,17 @@ module.exports.renderNewForm = (req, res) => {
 module.exports.createCampground = async (req, res, next) => {
   // if (!req.body.campground)
   //   throw new ExpressError('invalid Campground data', 400);
+  const geoData = await geoCoder
+    .forwardGeocode({
+      query: req.body.campground.location,
+      limit: 1,
+    })
+    .send();
+  // res.send();
 
   const campground = new Campground(req.body.campground);
+  campground.geometry = geoData.body.features[0].geometry;
+  // take our imgs from cloudinary from req.files
   campground.images = req.files.map((f) => ({
     url: f.path,
     filename: f.filename,
@@ -59,16 +74,30 @@ module.exports.renderEditForm = async (req, res) => {
 
 module.exports.updateCampground = async (req, res) => {
   const { id } = req.params;
-
+  // console.log(req.body);
   const campground = await Campground.findByIdAndUpdate(id, {
     ...req.body.campground,
   });
+  //take our files and push instead of overwriting
   const imgs = req.files.map((f) => ({
     url: f.path,
     filename: f.filename,
   }));
   campground.images.push(...imgs);
   await campground.save();
+  //to delete imgs matching our checkbox filenames
+
+  if (req.body.deleteImages) {
+    //remove from cloudinary host
+    for (let filename of req.body.deleteImages) {
+      await cloudinary.uploader.destroy(filename);
+    }
+    //pull operator / pull elements out of the array 😂
+    await campground.updateOne({
+      $pull: { images: { filename: { $in: req.body.deleteImages } } },
+    });
+    console.log(campground);
+  }
 
   req.flash('success', 'successfully updated campground!!!');
   res.redirect(`/campgrounds/${campground._id}`);

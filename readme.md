@@ -23,3 +23,5 @@
 - JOI
 - EJS MATE
 - METHOD-OVERRIDE
+- Passport
+- Cloudinary / Multer

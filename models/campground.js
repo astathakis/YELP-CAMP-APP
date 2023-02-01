@@ -2,15 +2,35 @@ const mongoose = require('mongoose');
 const Review = require('./review');
 const Schema = mongoose.Schema;
 
+// 'https://res.cloudinary.com/dbowbbm3q/image/upload/v1674606206/YelpCamp/fmudtuiblo2thjpukldl.jpg'
+
+const ImageSchema = new Schema({
+  url: String,
+  filename: String,
+});
+
+//add img transformation with cloudinary - reminder of using virtual properties - not stored in the DB
+ImageSchema.virtual('thumbnail').get(function () {
+  return this.url.replace('/upload', '/upload/w_200');
+});
+
+// const opts = { toJSON: { virtuals: true } };
+
 const CampgroundSchema = new Schema({
   title: String,
   location: String,
-  images: [
-    {
-      url: String,
-      filename: String,
+  images: [ImageSchema],
+  geometry: {
+    type: {
+      type: String,
+      enum: ['Point'],
+      required: true,
     },
-  ],
+    coordinates: {
+      type: [Number],
+      required: true,
+    },
+  },
   price: Number,
   description: String,
   author: {
